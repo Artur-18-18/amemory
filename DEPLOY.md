@@ -26,7 +26,7 @@ git push -u origin main
 
 | Поле | Значение |
 |------|----------|
-| Build Command | `npm install && npm run build` |
+| Build Command | `npm run render:build` |
 | Start Command | `npm start` |
 | Health Check | `/api/health` |
 
@@ -38,12 +38,9 @@ git push -u origin main
 | `MEMORIES_PASSWORD` | ваш пароль для «Воспоминания» |
 | `ADMIN_PASSWORD` | ваш пароль для админки |
 
-5. **Disk** (чтобы сохранялись фото и музыка):
+5. **Create Web Service** → дождитесь зелёного статуса **Live**
 
-- Mount Path: `/opt/render/project/src/server`
-- Size: 1 GB
-
-6. **Create Web Service** → дождитесь зелёного статуса **Live**
+> **Диск для uploads:** на Free-плане файлы сбрасываются при перезапуске. Для постоянного хранения подключите **Disk** (платный план) с Mount Path: `/opt/render/project/src/server`
 
 Сайт будет по адресу: `https://amemory.onrender.com` (или ваше имя сервиса).
 

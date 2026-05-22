@@ -4,8 +4,9 @@
   "private": true,
   "description": "Luxury personal blog with cinematic media showcase",
   "scripts": {
-    "postinstall": "npm install --prefix client",
+    "postinstall": "npm install --prefix client --include=dev",
     "build": "npm run build --prefix client",
+    "render:build": "npm install --include=dev && npm install --prefix client --include=dev && npm run build --prefix client",
     "start": "node server/index.js",
     "predev": "npx --yes kill-port 3000",
     "dev": "concurrently -n server,client -c blue,magenta \"npm run dev:server\" \"npm run dev:client\"",
@@ -14,7 +15,7 @@
     "dev:client": "npm run dev --prefix client"
   },
   "engines": {
-    "node": ">=18"
+    "node": "20.x"
   },
   "dependencies": {
     "cors": "^2.8.5",
