@@ -1,50 +1,49 @@
 # Деплой Amemory на Render
 
-## Шаг 1 — GitHub
+## Сохранение фото, видео и музыки
+
+На **бесплатном** плане Render файлы **удаляются** при перезапуске.
+
+Чтобы всё сохранялось после «сна» и деплоя:
+
+1. План **Starter** ($7/мес) или выше
+2. **Persistent Disk** 1 GB (уже в `render.yaml`)
+3. Переменная `PERSISTENT_PATH=/opt/render/project/src/persistent`
+
+Все загрузки идут в диск: `uploads/` (медиа) и `data/` (журнал, лайки, визиты).
+
+### Если сервис уже создан на Free
+
+1. Render Dashboard → ваш сервис → **Settings**
+2. **Instance Type** → **Starter**
+3. **Disks** → Add Disk:
+   - Name: `amemory-persistent`
+   - Mount Path: `/opt/render/project/src/persistent`
+   - Size: 1 GB
+4. **Environment** → добавьте:
+   - `PERSISTENT_PATH` = `/opt/render/project/src/persistent`
+5. **Save** → **Manual Deploy**
+
+---
+
+## GitHub + Render
 
 ```bash
-cd c:\Users\matka\Desktop\Amemory
-git init
 git add .
-git commit -m "Amemory: luxury blog ready for Render"
+git commit -m "Persistent disk for uploads"
+git push origin main
 ```
 
-Создайте репозиторий на GitHub (например `amemory`) и выполните:
+**Build Command:** `npm run render:build`  
+**Start Command:** `npm start`  
+**Health Check:** `/api/health`
 
-```bash
-git remote add origin https://github.com/ВАШ_ЛОГИН/amemory.git
-git branch -M main
-git push -u origin main
-```
-
-## Шаг 2 — Render
-
-1. Откройте [dashboard.render.com](https://dashboard.render.com)
-2. **New +** → **Blueprint** (если есть `render.yaml` в репо)  
-   или **Web Service** → подключите GitHub-репозиторий
-3. Настройки (если без Blueprint):
-
-| Поле | Значение |
-|------|----------|
-| Build Command | `npm run render:build` |
-| Start Command | `npm start` |
-| Health Check | `/api/health` |
-
-4. **Environment** (обязательно задайте вручную):
+### Environment
 
 | Key | Value |
 |-----|--------|
 | `NODE_ENV` | `production` |
-| `MEMORIES_PASSWORD` | ваш пароль для «Воспоминания» |
-| `ADMIN_PASSWORD` | ваш пароль для админки |
-
-5. **Create Web Service** → дождитесь зелёного статуса **Live**
-
-> **Диск для uploads:** на Free-плане файлы сбрасываются при перезапуске. Для постоянного хранения подключите **Disk** (платный план) с Mount Path: `/opt/render/project/src/server`
-
-Сайт будет по адресу: `https://amemory.onrender.com` (или ваше имя сервиса).
-
-## После деплоя
-
-- Загружайте контент через `/admin`
-- На бесплатном плане сервер «засыпает» — первый заход может занять 30–60 сек
+| `NPM_CONFIG_PRODUCTION` | `false` |
+| `PERSISTENT_PATH` | `/opt/render/project/src/persistent` |
+| `MEMORIES_PASSWORD` | ваш пароль |
+| `ADMIN_PASSWORD` | ваш пароль |

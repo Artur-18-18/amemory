@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 
-const DATA_DIR = path.join(__dirname, "..", "data");
+const { DATA_DIR } = require("./paths");
 const VISITS_FILE = path.join(DATA_DIR, "visits.json");
 const MAX_VISITS = 500;
 

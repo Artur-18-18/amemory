@@ -4,6 +4,9 @@ client/dist/
 server/uploads/**/*
 !server/uploads/**/.gitkeep
 !server/uploads/README.md
+persistent/uploads/**
+persistent/data/**
+!persistent/.gitkeep
 .DS_Store
 .env
 .env.local

@@ -2,9 +2,14 @@ const fs = require("fs");
 const path = require("path");
 const mime = require("mime-types");
 const likes = require("./likes");
+const {
+  UPLOADS_ROOT,
+  DATA_DIR,
+  SERVER_ROOT,
+  ensurePersistentDirs,
+  migrateBundledDataToDisk,
+} = require("./paths");
 
-const UPLOADS_ROOT = path.join(__dirname, "..", "uploads");
-const DATA_DIR = path.join(__dirname, "..", "data");
 const SITE_JSON = path.join(DATA_DIR, "site.json");
 
 const CATEGORIES = ["showcase", "music", "playlist", "memories"];
@@ -24,6 +29,9 @@ const AUDIO_EXT = new Set([
 ]);
 
 function ensureDirs() {
+  ensurePersistentDirs();
+  migrateBundledDataToDisk();
+
   for (const cat of CATEGORIES) {
     const dir = path.join(UPLOADS_ROOT, cat);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -47,6 +55,7 @@ function normalizeSiteData(site) {
 function migrateLegacyUploads() {
   if (!fs.existsSync(UPLOADS_ROOT)) return;
   const showcaseDir = path.join(UPLOADS_ROOT, "showcase");
+  if (!fs.existsSync(showcaseDir)) fs.mkdirSync(showcaseDir, { recursive: true });
   const rootFiles = fs.readdirSync(UPLOADS_ROOT).filter((n) => {
     if (n.startsWith(".") || CATEGORIES.includes(n)) return false;
     const full = path.join(UPLOADS_ROOT, n);
@@ -126,8 +135,8 @@ function getShowcaseMedia() {
 }
 
 function getGalleryImages(sessionId = null) {
-  const images = scanCategory("showcase").filter((i) => i.type === "image");
-  return likes.enrichGalleryItems(images, sessionId);
+  const media = scanCategory("showcase").filter((i) => i.type === "image" || i.type === "video");
+  return likes.enrichGalleryItems(media, sessionId);
 }
 
 function getMusicTracks() {
@@ -247,6 +256,8 @@ function categoryDir(category) {
 
 module.exports = {
   UPLOADS_ROOT,
+  DATA_DIR,
+  SERVER_ROOT,
   CATEGORIES,
   ensureDirs,
   migrateLegacyUploads,

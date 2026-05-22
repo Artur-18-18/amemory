@@ -21,6 +21,12 @@ const CLIENT_DIST = path.join(__dirname, "..", "client", "dist");
 storage.ensureDirs();
 storage.migrateLegacyUploads();
 
+if (process.env.PERSISTENT_PATH) {
+  console.log(`Persistent storage: ${process.env.PERSISTENT_PATH}`);
+} else {
+  console.log("Storage: local server/ folder (dev mode)");
+}
+
 function getUploadCategory(req) {
   return req.query.category || req.body?.category || "showcase";
 }
@@ -46,7 +52,12 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/api/health", (_req, res) => {
-  res.json({ ok: true, service: "amemory" });
+  res.json({
+    ok: true,
+    service: "amemory",
+    persistent: Boolean(process.env.PERSISTENT_PATH),
+    storagePath: process.env.PERSISTENT_PATH || "server/",
+  });
 });
 
 app.post("/api/visit", (req, res) => {
@@ -190,7 +201,10 @@ app.get("/api/admin/files", authMiddleware("admin"), (_req, res) => {
   const likeCounts = likes.getAllLikeCounts();
   files.showcase = files.showcase.map((item) => ({
     ...item,
-    likes: item.type === "image" ? likeCounts[item.filename] || 0 : null,
+    likes:
+      item.type === "image" || item.type === "video"
+        ? likeCounts[item.filename] || 0
+        : null,
   }));
   res.json(files);
 });

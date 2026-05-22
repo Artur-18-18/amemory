@@ -87,7 +87,7 @@ export function MediaShowcase() {
 
         {!loading && hasMedia && (
           <p className="mt-10 text-center text-xs tracking-widest text-luxury-silver/60">
-            {data?.total ?? 0} работ в архиве · смотреть в{" "}
+            {data?.total ?? 0} работ на витрине · смотреть в{" "}
             <Link to="/gallery" className="text-luxury-glow hover:underline">
               галерее
             </Link>

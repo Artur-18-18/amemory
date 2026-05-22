@@ -254,7 +254,8 @@ export function AdminPage() {
                         <div>
                           <p className="text-sm text-white">{item.title}</p>
                           <p className="text-xs text-luxury-silver">{item.filename}</p>
-                          {cat.id === "showcase" && item.type === "image" && (
+                          {cat.id === "showcase" &&
+                            (item.type === "image" || item.type === "video") && (
                             <p className="mt-1 text-xs text-red-300/90">
                               ♥ {item.likes ?? 0}{" "}
                               {(item.likes ?? 0) === 1

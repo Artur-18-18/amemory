@@ -109,7 +109,28 @@ export function MemoriesPage() {
         </div>
       </div>
 
-      <Lightbox item={active} onClose={() => setActive(null)} />
+      <Lightbox
+        item={active}
+        index={active ? items.findIndex((i) => i.id === active.id) : 0}
+        total={items.length}
+        onClose={() => setActive(null)}
+        onPrev={
+          active && items.findIndex((i) => i.id === active.id) > 0
+            ? () => {
+                const i = items.findIndex((x) => x.id === active.id);
+                setActive(items[i - 1]);
+              }
+            : undefined
+        }
+        onNext={
+          active && items.findIndex((i) => i.id === active.id) < items.length - 1
+            ? () => {
+                const i = items.findIndex((x) => x.id === active.id);
+                setActive(items[i + 1]);
+              }
+            : undefined
+        }
+      />
     </section>
   );
 }

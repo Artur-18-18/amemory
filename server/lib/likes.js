@@ -1,11 +1,11 @@
 const fs = require("fs");
 const path = require("path");
+const { DATA_DIR } = require("./paths");
 
-const LIKES_FILE = path.join(__dirname, "..", "data", "likes.json");
+const LIKES_FILE = path.join(DATA_DIR, "likes.json");
 
 function ensureFile() {
-  const dir = path.dirname(LIKES_FILE);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
   if (!fs.existsSync(LIKES_FILE)) {
     fs.writeFileSync(LIKES_FILE, JSON.stringify({ counts: {}, sessions: {} }, null, 2));
   }

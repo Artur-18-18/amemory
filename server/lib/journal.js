@@ -2,7 +2,8 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 
-const SITE_JSON = path.join(__dirname, "..", "data", "site.json");
+const { DATA_DIR } = require("./paths");
+const SITE_JSON = path.join(DATA_DIR, "site.json");
 
 const DEFAULT_ENTRIES = [
   {

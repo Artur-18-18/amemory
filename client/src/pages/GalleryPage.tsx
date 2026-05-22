@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
 import { fetchGallery } from "../api";
-import { LikeButton } from "../components/LikeButton";
+import { GalleryTile } from "../components/GalleryTile";
 import { Lightbox } from "../components/Lightbox";
 import { getSessionId } from "../utils/session";
 import type { MediaItem } from "../types";
@@ -53,8 +53,8 @@ export function GalleryPage() {
             <span className="text-gradient-luxury italic">Галерея</span>
           </h1>
           <p className="mx-auto mt-4 max-w-lg text-sm text-luxury-silver">
-            Нажмите на фото для просмотра. <span className="text-luxury-glow">♡</span> — поставить
-            лайк (один раз с вашего устройства).
+            Нажмите для просмотра. В полноэкранном режиме — свайп или стрелки ← →.{" "}
+            <span className="text-luxury-glow">♡</span> — лайк.
           </p>
         </motion.header>
 
@@ -68,7 +68,7 @@ export function GalleryPage() {
 
         {!loading && items.length === 0 && (
           <div className="glass-card p-10 text-center text-luxury-silver">
-            Нет изображений. Добавьте фото в раздел «Витрина» через админ-панель.
+            Пока пусто. Добавьте фото или видео в раздел «Витрина» через админ-панель.
           </div>
         )}
 
@@ -76,39 +76,15 @@ export function GalleryPage() {
           {items.map((item, i) => (
             <motion.div
               key={item.id}
-              className="group relative aspect-[3/4] overflow-hidden rounded-2xl"
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.04 }}
             >
-              <button
-                type="button"
-                className="absolute inset-0 z-0"
-                onClick={() => setActive(item)}
-                aria-label={`Открыть ${item.title || item.filename}`}
-              >
-                <img
-                  src={item.url}
-                  alt={item.title || item.filename}
-                  loading="lazy"
-                  className="h-full w-full object-cover grayscale transition duration-500 group-hover:scale-105 group-hover:grayscale-0 group-hover:brightness-110"
-                />
-              </button>
-
-              <div className="absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/80 to-transparent p-3 pt-8">
-                <div className="flex items-end justify-between gap-2">
-                  <span className="min-w-0 truncate text-xs text-white/90">
-                    {item.title}
-                  </span>
-                  <LikeButton
-                    filename={item.filename}
-                    likes={item.likes ?? 0}
-                    liked={item.liked ?? false}
-                    onUpdate={(liked, likes) => updateItem(item.filename, liked, likes)}
-                    size="sm"
-                  />
-                </div>
-              </div>
+              <GalleryTile
+                item={item}
+                onOpen={() => setActive(item)}
+                onLikeUpdate={(liked, likes) => updateItem(item.filename, liked, likes)}
+              />
             </motion.div>
           ))}
         </div>
@@ -116,18 +92,16 @@ export function GalleryPage() {
 
       <Lightbox
         item={active}
+        index={index}
+        total={items.length}
         onClose={() => setActive(null)}
         onLikeUpdate={
           active
             ? (liked, likes) => updateItem(active.filename, liked, likes)
             : undefined
         }
-        onPrev={
-          index > 0 ? () => setActive(items[index - 1]) : undefined
-        }
-        onNext={
-          index < items.length - 1 ? () => setActive(items[index + 1]) : undefined
-        }
+        onPrev={index > 0 ? () => setActive(items[index - 1]) : undefined}
+        onNext={index < items.length - 1 ? () => setActive(items[index + 1]) : undefined}
       />
     </section>
   );
