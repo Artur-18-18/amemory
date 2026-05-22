@@ -1,0 +1,21 @@
+# Render Blueprint: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: amemory
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MEMORIES_PASSWORD
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+    disk:
+      name: amemory-data
+      mountPath: /opt/render/project/src/server
+      sizeGB: 1
