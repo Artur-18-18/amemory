@@ -69,6 +69,7 @@ docker run -p 10000:10000 -e PORT=10000 -e DATABASE_URL=sqlite:////tmp/test.db a
 
 | Ошибка в логах | Решение |
 |----------------|---------|
+| `externally-managed-environment` | Используйте `npm start` (создаёт `.venv`) — уже в проекте |
 | `npm: command not found` | Переключите Runtime на **Docker** |
 | `Could not resolve host: github.com` | Проблема интернета/DNS на ПК, не Render |
 | `ModuleNotFoundError: app` | Start: пусто (Docker CMD) или `cd backend && uvicorn...` |
