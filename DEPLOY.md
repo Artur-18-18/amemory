@@ -21,17 +21,29 @@
 
 > Если Blueprint ругается на бесплатную БД — создайте PostgreSQL вручную в Render или используйте [Neon](https://neon.tech) (бесплатно) и вставьте `DATABASE_URL` в Environment.
 
-## Уже есть сервис на Render (деплой упал)
+## Уже есть сервис на Render (ошибка `No module named uvicorn`)
 
-В **Dashboard → ваш Web Service → Settings** измените:
+Сейчас Render запускает `npm start`, но **не ставит Python-пакеты** на этапе build.
+
+### Вариант A — Node runtime (быстрый фикс)
+
+**Settings → Build & Deploy:**
+
+| Поле | Значение |
+|------|----------|
+| **Build Command** | `npm install && npm run render:build` |
+| **Start Command** | `npm start` |
+| **Health Check Path** | `/api/health` |
+
+`npm start` теперь сам ставит `uvicorn` и слушает порт **`$PORT`** (не 3000).
+
+### Вариант B — Docker (рекомендуется)
 
 | Поле | Значение |
 |------|----------|
 | **Runtime** | `Docker` |
 | **Dockerfile Path** | `./Dockerfile` |
-| **Docker Context** | `.` |
-| **Build Command** | *(оставить пустым — сборка в Dockerfile)* |
-| **Start Command** | *(оставить пустым)* |
+| **Build / Start Command** | *(пусто)* |
 | **Health Check Path** | `/api/health` |
 
 Убедитесь, что есть переменная **`DATABASE_URL`** (из PostgreSQL или Neon).
