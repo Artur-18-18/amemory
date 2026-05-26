@@ -47,10 +47,9 @@ npm start
 
 ## Deploy на Render
 
-См. [DEPLOY.md](./DEPLOY.md). Blueprint `render.yaml` создаёт Web-сервис (Python) и **PostgreSQL**.
+См. [DEPLOY.md](./DEPLOY.md). Деплой через **Docker** (сборка React + Python в одном образе) и **PostgreSQL**.
 
-- **Build:** `npm run render:build`
-- **Start:** `cd backend && python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+- **Runtime:** Docker (`Dockerfile` в корне)
 - **Health:** `/api/health`
 
 При первом запуске файлы из `server/uploads/` и данные из `server/data/` автоматически импортируются в базу.

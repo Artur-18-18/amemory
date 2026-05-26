@@ -1,43 +1,64 @@
-# Деплой Amemory на Render (Python + PostgreSQL)
+# Деплой Amemory на Render
+
+## Почему Docker
+
+На Render **Python runtime не содержит Node.js** — команда `npm run build` падает с `npm: command not found`.
+
+Поэтому используется **Docker**: в одном образе собирается React и запускается FastAPI.
 
 ## Хранение данных
 
-Все **фото, видео, музыка**, журнал, лайки и визиты сохраняются в **PostgreSQL** через **SQLAlchemy**.
+Фото, видео, музыка, журнал и лайки — в **PostgreSQL** (SQLAlchemy). После «сна» Render данные **не пропадают**.
 
-После «сна» и перезапуска хостинга на Render данные **не исчезают** — они в базе.
+## Новый деплой (Blueprint)
 
-## Локальный запуск
+1. Push на GitHub
+2. Render → **New → Blueprint** → репозиторий `Artur-18-18/amemory`
+3. При создании задать `MEMORIES_PASSWORD` и `ADMIN_PASSWORD`
+4. Deploy
+
+`DATABASE_URL` подставится из PostgreSQL автоматически.
+
+> Если Blueprint ругается на бесплатную БД — создайте PostgreSQL вручную в Render или используйте [Neon](https://neon.tech) (бесплатно) и вставьте `DATABASE_URL` в Environment.
+
+## Уже есть сервис на Render (деплой упал)
+
+В **Dashboard → ваш Web Service → Settings** измените:
+
+| Поле | Значение |
+|------|----------|
+| **Runtime** | `Docker` |
+| **Dockerfile Path** | `./Dockerfile` |
+| **Docker Context** | `.` |
+| **Build Command** | *(оставить пустым — сборка в Dockerfile)* |
+| **Start Command** | *(оставить пустым)* |
+| **Health Check Path** | `/api/health` |
+
+Убедитесь, что есть переменная **`DATABASE_URL`** (из PostgreSQL или Neon).
+
+Сохраните → **Manual Deploy → Deploy latest commit**.
+
+## Локально
 
 ```bash
-# Python 3.11+
 pip install -r backend/requirements.txt
 npm install
 npm run dev
 ```
 
-- Сайт: http://localhost:5173  
-- API: http://localhost:3000  
-- Локальная БД: файл `amemory.db` (SQLite) в корне проекта
+Проверка Docker-сборки как на Render:
 
-## Render
+```bash
+docker build -t amemory .
+docker run -p 10000:10000 -e PORT=10000 -e DATABASE_URL=sqlite:////tmp/test.db amemory
+```
 
-1. Push на GitHub
-2. **New → Blueprint** → подключить репозиторий (`render.yaml` создаст Web + PostgreSQL)
-3. Задать в Environment:
-   - `MEMORIES_PASSWORD`
-   - `ADMIN_PASSWORD`
-4. Deploy
+## Частые ошибки
 
-`DATABASE_URL` подставится автоматически из PostgreSQL.
-
-### Build / Start (вручную)
-
-| | |
-|---|---|
-| Build | `npm run render:build` |
-| Start | `cd backend && python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
-| Health | `/api/health` |
-
-## Миграция со старого Node-сервера
-
-При первом запуске Python автоматически импортирует файлы из `server/uploads/` в базу данных.
+| Ошибка в логах | Решение |
+|----------------|---------|
+| `npm: command not found` | Переключите Runtime на **Docker** |
+| `Could not resolve host: github.com` | Проблема интернета/DNS на ПК, не Render |
+| `ModuleNotFoundError: app` | Start: пусто (Docker CMD) или `cd backend && uvicorn...` |
+| Health check failed | Проверьте `DATABASE_URL`, логи при старте |
+| Blueprint: database plan | Уберите `plan: free` у БД или подключите Neon |
