@@ -26,7 +26,12 @@ export function PlaylistPage() {
         {!libraryReady ? (
           <div className="glass-card h-40 shimmer-bg animate-shimmer sm:h-48" />
         ) : (
-          <TrackList tracks={playlistTracks} source="playlist" sourceLabel="Плейлист" />
+          <TrackList
+            tracks={playlistTracks}
+            source="playlist"
+            sourceLabel="Плейлист"
+            showDownload
+          />
         )}
       </div>
     </section>

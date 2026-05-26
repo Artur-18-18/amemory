@@ -31,6 +31,7 @@ export function MusicPage() {
             source="music"
             sourceLabel="Музыка"
             showFavorites
+            showDownload
           />
         )}
       </div>

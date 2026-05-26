@@ -12,6 +12,9 @@ services:
     dockerfilePath: ./Dockerfile
     dockerContext: .
     healthCheckPath: /api/health
+    # Если используете Node runtime вместо Docker:
+    # buildCommand: npm install && npm run render:build
+    # startCommand: npm start
     envVars:
       - key: DATABASE_URL
         fromDatabase:

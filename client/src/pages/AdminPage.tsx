@@ -49,6 +49,7 @@ export function AdminPage() {
   const [category, setCategory] = useState<string>("showcase");
   const [title, setTitle] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [visits, setVisits] = useState<VisitRecord[]>([]);
   const [visitStats, setVisitStats] = useState<VisitStats>({
@@ -100,24 +101,56 @@ export function AdminPage() {
     if (!token) return;
     const form = e.currentTarget;
     const fileInput = form.elements.namedItem("file") as HTMLInputElement;
-    const file = fileInput.files?.[0];
-    if (!file) return;
+    const files = fileInput.files ? Array.from(fileInput.files) : [];
+    if (files.length === 0) return;
 
+    const catLabel = CATEGORIES.find((c) => c.id === category)?.label ?? category;
     setUploading(true);
     setMessage(null);
+    setUploadProgress(null);
+
+    let ok = 0;
+    const errors: string[] = [];
+
     try {
-      await uploadAdminFile(token, file, category, title || undefined);
-      setMessage(`Загружено в «${CATEGORIES.find((c) => c.id === category)?.label}»`);
-      setTitle("");
-      form.reset();
-      await loadFiles();
-      if (category === "music" || category === "playlist") {
-        window.dispatchEvent(new Event("amemory-library-refresh"));
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        setUploadProgress(
+          files.length > 1 ? `Загрузка ${i + 1} из ${files.length}: ${file.name}` : null
+        );
+        const fileTitle =
+          files.length === 1 && title.trim() ? title.trim() : undefined;
+        try {
+          await uploadAdminFile(token, file, category, fileTitle);
+          ok += 1;
+        } catch (err) {
+          errors.push(
+            `${file.name}: ${err instanceof Error ? err.message : "ошибка"}`
+          );
+        }
       }
-    } catch (err) {
-      setMessage(err instanceof Error ? err.message : "Ошибка загрузки");
+
+      if (ok > 0) {
+        const n = ok;
+        const word =
+          n === 1 ? "файл" : n >= 2 && n <= 4 ? "файла" : "файлов";
+        setMessage(
+          errors.length
+            ? `Загружено ${n} ${word} в «${catLabel}». Ошибки: ${errors.join("; ")}`
+            : `Загружено ${n} ${word} в «${catLabel}»`
+        );
+        setTitle("");
+        form.reset();
+        await loadFiles();
+        if (category === "music" || category === "playlist") {
+          window.dispatchEvent(new Event("amemory-library-refresh"));
+        }
+      } else {
+        setMessage(errors.join("; ") || "Ошибка загрузки");
+      }
     } finally {
       setUploading(false);
+      setUploadProgress(null);
     }
   }
 
@@ -178,7 +211,7 @@ export function AdminPage() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <h2 className="font-display text-xl">Загрузить файл</h2>
+          <h2 className="font-display text-xl">Загрузить файлы</h2>
 
           <label className="block text-xs uppercase tracking-widest text-luxury-silver">
             Раздел
@@ -197,7 +230,7 @@ export function AdminPage() {
           <p className="text-xs text-luxury-silver/80">{catInfo.hint}</p>
 
           <label className="block text-xs uppercase tracking-widest text-luxury-silver">
-            Название (необязательно)
+            Название (только если выбран один файл)
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -206,20 +239,24 @@ export function AdminPage() {
             />
           </label>
 
-          <input
-            name="file"
-            type="file"
-            accept={catInfo.accept}
-            required
-            className="block w-full text-sm text-luxury-silver file:mr-4 file:rounded-full file:border-0 file:bg-white file:px-4 file:py-2 file:text-xs file:uppercase file:text-luxury-black"
-          />
+          <label className="block text-xs uppercase tracking-widest text-luxury-silver">
+            Файлы (можно выбрать несколько)
+            <input
+              name="file"
+              type="file"
+              accept={catInfo.accept}
+              multiple
+              required
+              className="mt-2 block w-full text-sm text-luxury-silver file:mr-4 file:rounded-full file:border-0 file:bg-white file:px-4 file:py-2 file:text-xs file:uppercase file:text-luxury-black"
+            />
+          </label>
 
           <button
             type="submit"
             disabled={uploading}
             className="w-full rounded-full bg-white py-3 text-xs font-medium uppercase tracking-[0.2em] text-luxury-black disabled:opacity-50"
           >
-            {uploading ? "Загрузка…" : "Загрузить"}
+            {uploading ? uploadProgress || "Загрузка…" : "Загрузить"}
           </button>
           {message && <p className="text-center text-sm text-luxury-glow">{message}</p>}
         </motion.form>

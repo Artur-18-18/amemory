@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { mediaDownloadUrl } from "../api";
 import { usePlayer, type QueueSource } from "../context/PlayerContext";
 import type { MediaItem } from "../types";
 
@@ -8,6 +9,7 @@ interface TrackListProps {
   sourceLabel: string;
   emptyText?: string;
   showFavorites?: boolean;
+  showDownload?: boolean;
 }
 
 export function TrackList({
@@ -16,6 +18,7 @@ export function TrackList({
   sourceLabel,
   emptyText = "Пока нет треков. Загрузите MP3/WAV в админке → раздел «Музыка».",
   showFavorites = false,
+  showDownload = false,
 }: TrackListProps) {
   const {
     queue,
@@ -115,6 +118,19 @@ export function TrackList({
                     {isCurrent && playing ? "▶ Играет" : isCurrent ? "Пауза" : fav && showFavorites ? "В плейлисте" : ""}
                   </span>
                 </button>
+
+                {showDownload && (
+                  <a
+                    href={mediaDownloadUrl(t.url)}
+                    download={t.filename}
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 text-sm text-luxury-silver transition hover:border-luxury-glow/40 hover:text-luxury-glow"
+                    title="Скачать"
+                    aria-label={`Скачать ${t.title}`}
+                  >
+                    ↓
+                  </a>
+                )}
               </div>
             </li>
           );

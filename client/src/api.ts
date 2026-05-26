@@ -154,6 +154,11 @@ export async function fetchAdminFiles(token: string): Promise<AdminFilesResponse
   return parseJson(res);
 }
 
+/** URL для скачивания трека (Content-Disposition: attachment) */
+export function mediaDownloadUrl(url: string): string {
+  return `${url}${url.includes("?") ? "&" : "?"}download=1`;
+}
+
 export async function uploadAdminFile(
   token: string,
   file: File,

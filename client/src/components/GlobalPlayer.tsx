@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
+import { mediaDownloadUrl } from "../api";
 import { usePlayer } from "../context/PlayerContext";
 
 function formatTime(sec: number) {
@@ -95,7 +96,16 @@ export function GlobalPlayer() {
                 </p>
               </div>
 
-              <div className="hidden shrink-0 gap-2 md:flex">
+              <div className="hidden shrink-0 items-center gap-2 md:flex">
+                <a
+                  href={mediaDownloadUrl(track.url)}
+                  download={track.filename}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-sm text-luxury-silver transition hover:border-luxury-glow/40 hover:text-luxury-glow"
+                  title="Скачать трек"
+                  aria-label="Скачать трек"
+                >
+                  ↓
+                </a>
                 {source !== "music" && (
                   <Link
                     to="/music"
@@ -116,6 +126,15 @@ export function GlobalPlayer() {
             </div>
 
             <div className="mt-2 flex gap-2 md:hidden">
+              <a
+                href={mediaDownloadUrl(track.url)}
+                download={track.filename}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 text-sm text-luxury-silver"
+                title="Скачать"
+                aria-label="Скачать трек"
+              >
+                ↓
+              </a>
               {source !== "music" && (
                 <Link
                   to="/music"

@@ -1,5 +1,7 @@
+import secrets
 import time
 from pathlib import Path
+from urllib.parse import quote
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -56,11 +58,19 @@ def health():
 
 
 @app.get("/uploads/{category}/{filename}")
-def serve_upload(category: str, filename: str, db: Session = Depends(get_db)):
+def serve_upload(
+    category: str,
+    filename: str,
+    download: bool = Query(False),
+    db: Session = Depends(get_db),
+):
     item = media_svc.get_file(db, category, filename)
     if not item:
         raise HTTPException(status_code=404, detail="Файл не найден")
-    return Response(content=item.content, media_type=item.mime_type)
+    headers = {}
+    if download:
+        headers["Content-Disposition"] = f"attachment; filename*=UTF-8''{quote(filename)}"
+    return Response(content=item.content, media_type=item.mime_type, headers=headers)
 
 
 @app.get("/api/media")
@@ -251,7 +261,8 @@ async def api_admin_upload(
     if not file.filename:
         raise HTTPException(status_code=400, detail="Файл не передан")
     content = await file.read()
-    filename = f"{int(time.time() * 1000)}-{media_svc.safe_filename(file.filename)}"
+    safe = media_svc.safe_filename(file.filename)
+    filename = f"{int(time.time() * 1000)}-{secrets.token_hex(3)}-{safe}"
     try:
         item = media_svc.create_media(db, category, filename, content, title)
         return {"ok": True, "file": media_svc.media_to_dict(item), "category": category}
