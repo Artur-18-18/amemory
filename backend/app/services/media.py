@@ -5,7 +5,7 @@ from datetime import datetime
 from urllib.parse import quote
 
 from sqlalchemy import func
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, defer
 
 from ..config import AUDIO_EXT, CATEGORIES, IMAGE_EXT, VIDEO_EXT
 from ..models import Favorite, Like, MediaFile
@@ -63,18 +63,43 @@ def is_liked(db: Session, media_id: int, session_id: str | None) -> bool:
 
 
 def enrich_items(db: Session, items: list[MediaFile], session_id: str | None = None) -> list[dict]:
+    if not items:
+        return []
+
+    ids = [item.id for item in items]
+    counts = {
+        mid: cnt
+        for mid, cnt in db.query(Like.media_id, func.count(Like.id))
+        .filter(Like.media_id.in_(ids))
+        .group_by(Like.media_id)
+        .all()
+    }
+    liked_ids: set[int] = set()
+    if session_id:
+        liked_ids = {
+            mid
+            for (mid,) in db.query(Like.media_id)
+            .filter(Like.media_id.in_(ids), Like.session_id == session_id)
+            .all()
+        }
+
     return [
         media_to_dict(
             item,
-            likes=like_count(db, item.id),
-            liked=is_liked(db, item.id, session_id),
+            likes=counts.get(item.id, 0),
+            liked=item.id in liked_ids,
         )
         for item in items
     ]
 
 
+def _query_meta(db: Session):
+    """Список/метаданные без загрузки бинарника (иначе OOM на Render)."""
+    return db.query(MediaFile).options(defer(MediaFile.content))
+
+
 def list_by_category(db: Session, category: str) -> list[MediaFile]:
-    q = db.query(MediaFile).filter(MediaFile.category == category)
+    q = _query_meta(db).filter(MediaFile.category == category)
     if category == "playlist":
         return q.order_by(
             MediaFile.playlist_order.asc().nulls_last(),
@@ -84,6 +109,16 @@ def list_by_category(db: Session, category: str) -> list[MediaFile]:
 
 
 def get_file(db: Session, category: str, filename: str) -> MediaFile | None:
+    return (
+        _query_meta(db)
+        .filter(MediaFile.category == category, MediaFile.filename == filename)
+        .first()
+    )
+
+
+def get_file_with_content(
+    db: Session, category: str, filename: str
+) -> MediaFile | None:
     return (
         db.query(MediaFile)
         .filter(MediaFile.category == category, MediaFile.filename == filename)
@@ -110,7 +145,7 @@ def create_media(
         "video/mp4" if media_type == "video" else "audio/mpeg" if media_type == "audio" else "image/jpeg"
     )
 
-    existing = get_file(db, category, filename)
+    existing = get_file_with_content(db, category, filename)
     if existing:
         db.delete(existing)
         db.flush()
@@ -164,7 +199,7 @@ def get_favorite_filenames(db: Session) -> list[str]:
 
 
 def add_favorite(db: Session, music_filename: str) -> None:
-    music = get_file(db, "music", music_filename)
+    music = get_file_with_content(db, "music", music_filename)
     if not music:
         raise ValueError("Трек не найден в разделе «Музыка»")
 

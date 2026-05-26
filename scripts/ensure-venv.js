@@ -1,5 +1,5 @@
 /**
- * Create .venv and install backend/requirements.txt (PEP 668 safe on Render/Debian).
+ * Python venv: полная установка на build, быстрый старт на run.
  */
 const fs = require("fs");
 const path = require("path");
@@ -23,20 +23,30 @@ function run(cmd, args, cwd = root) {
   }
 }
 
+/** Только для npm run render:build */
 function ensureVenv() {
   if (!fs.existsSync(venvPython)) {
     console.log("[amemory] Creating Python venv…");
     run(basePython, ["-m", "venv", venvDir]);
   }
-
   console.log("[amemory] Installing Python dependencies in venv…");
   run(venvPython, ["-m", "pip", "install", "--upgrade", "pip", "-q"]);
   run(venvPython, ["-m", "pip", "install", "-r", "backend/requirements.txt", "-q"]);
-
   return venvPython;
 }
 
-module.exports = { ensureVenv, venvPython: () => venvPython };
+/** Быстрый старт — без pip (Render health check) */
+function getVenvPython() {
+  if (!fs.existsSync(venvPython)) {
+    console.error(
+      "[amemory] .venv not found. Set Build Command: npm install && npm run render:build"
+    );
+    process.exit(1);
+  }
+  return venvPython;
+}
+
+module.exports = { ensureVenv, getVenvPython };
 
 if (require.main === module) {
   ensureVenv();

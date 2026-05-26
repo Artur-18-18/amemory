@@ -20,4 +20,4 @@ COPY --from=client-build /app/client/dist ./client/dist
 WORKDIR /app/backend
 EXPOSE 10000
 
-CMD ["sh", "-c", "python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-10000}"]
+CMD ["sh", "-c", "exec python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-10000} --timeout-keep-alive 75"]

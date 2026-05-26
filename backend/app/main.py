@@ -1,3 +1,5 @@
+import io
+import os
 import secrets
 import time
 from pathlib import Path
@@ -5,7 +7,7 @@ from urllib.parse import quote
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, Response
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
@@ -17,7 +19,7 @@ from .auth import (
     require_memories,
 )
 from .config import CLIENT_DIST, DATABASE_URL
-from .database import get_db, init_db
+from .database import check_connection, get_db, init_db
 from .services import journal as journal_svc
 from .services import likes as likes_svc
 from .services import media as media_svc
@@ -36,23 +38,32 @@ app.add_middleware(
 
 @app.on_event("startup")
 def startup():
-    init_db()
-    db = next(get_db())
     try:
-        n = import_legacy_uploads(db)
-        if n:
-            print(f"Imported {n} legacy files into database")
-    finally:
-        db.close()
-    print(f"Database: {DATABASE_URL.split('@')[-1] if '@' in DATABASE_URL else DATABASE_URL}")
+        init_db()
+        print(f"Database OK: {DATABASE_URL.split('@')[-1] if '@' in DATABASE_URL else DATABASE_URL}")
+    except Exception as e:
+        print(f"Database init failed: {e}")
+
+    if os.getenv("IMPORT_LEGACY", "").lower() in ("1", "true", "yes"):
+        db = next(get_db())
+        try:
+            n = import_legacy_uploads(db)
+            if n:
+                print(f"Imported {n} legacy files into database")
+        except Exception as e:
+            print(f"Legacy import skipped: {e}")
+        finally:
+            db.close()
 
 
 @app.get("/api/health")
 def health():
+    db_ok = check_connection()
     return {
-        "ok": True,
+        "ok": db_ok,
         "service": "amemory",
         "database": "postgresql" if "postgresql" in DATABASE_URL else "sqlite",
+        "databaseOk": db_ok,
         "storage": "sqlalchemy",
     }
 
@@ -64,13 +75,19 @@ def serve_upload(
     download: bool = Query(False),
     db: Session = Depends(get_db),
 ):
-    item = media_svc.get_file(db, category, filename)
+    item = media_svc.get_file_with_content(db, category, filename)
     if not item:
         raise HTTPException(status_code=404, detail="Файл не найден")
     headers = {}
     if download:
         headers["Content-Disposition"] = f"attachment; filename*=UTF-8''{quote(filename)}"
-    return Response(content=item.content, media_type=item.mime_type, headers=headers)
+
+    def stream_chunks():
+        buf = io.BytesIO(item.content)
+        while chunk := buf.read(1024 * 256):
+            yield chunk
+
+    return StreamingResponse(stream_chunks(), media_type=item.mime_type, headers=headers)
 
 
 @app.get("/api/media")

@@ -73,5 +73,6 @@ docker run -p 10000:10000 -e PORT=10000 -e DATABASE_URL=sqlite:////tmp/test.db a
 | `npm: command not found` | Переключите Runtime на **Docker** |
 | `Could not resolve host: github.com` | Проблема интернета/DNS на ПК, не Render |
 | `ModuleNotFoundError: app` | Start: пусто (Docker CMD) или `cd backend && uvicorn...` |
+| **502 Bad Gateway** | Пересоберите с последним кодом; Build: `npm install && npm run render:build`; проверьте `DATABASE_URL` |
 | Health check failed | Проверьте `DATABASE_URL`, логи при старте |
 | Blueprint: database plan | Уберите `plan: free` у БД или подключите Neon |
