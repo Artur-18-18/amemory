@@ -20,20 +20,17 @@
 
 На Render задайте переменные окружения `MEMORIES_PASSWORD` и `ADMIN_PASSWORD`.
 
-## Куда загружать файлы (админка)
+## Хранение данных
 
-| Категория | Куда попадает |
-|-----------|----------------|
-| **Витрина** | Главная витрина + галерея (фото и видео) |
-| **Музыка** | Раздел «Музыка» |
-| **Плейлист** | Раздел «Плейлист» |
-| **Воспоминания** | Закрытый раздел после ввода пароля |
+Все **фото, видео, музыка**, журнал, лайки и избранное хранятся в **PostgreSQL** через **SQLAlchemy** (на Render). После «сна» хостинга контент **не пропадает**.
 
-Папки на сервере: `server/uploads/showcase`, `music`, `playlist`, `memories`.
+Локально используется SQLite (`amemory.db` в корне проекта).
 
 ## Локальный запуск
 
 ```bash
+# Python 3.11+
+pip install -r backend/requirements.txt
 npm install
 npm run dev
 ```
@@ -44,17 +41,20 @@ npm run dev
 ## Production
 
 ```bash
-npm run build
+npm run render:build
 npm start
 ```
 
 ## Deploy на Render
 
-- **Build:** `npm install && npm run build`
-- **Start:** `npm start`
+См. [DEPLOY.md](./DEPLOY.md). Blueprint `render.yaml` создаёт Web-сервис (Python) и **PostgreSQL**.
+
+- **Build:** `npm run render:build`
+- **Start:** `cd backend && python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT`
 - **Health:** `/api/health`
-- Для сохранения файлов после перезапуска: план **Starter** + диск (см. `DEPLOY.md`, `PERSISTENT_PATH`).
+
+При первом запуске файлы из `server/uploads/` и данные из `server/data/` автоматически импортируются в базу.
 
 ## Стек
 
-React, Tailwind, Framer Motion, Express, Multer
+React, Vite, Tailwind, Framer Motion · **FastAPI, SQLAlchemy, PostgreSQL**

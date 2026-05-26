@@ -1,23 +1,27 @@
-# Render Blueprint — для сохранения фото/видео нужен диск (план Starter+)
+# Render Blueprint — PostgreSQL хранит все медиа и данные (не пропадают после сна)
+databases:
+  - name: amemory-db
+    databaseName: amemory
+    user: amemory
+    plan: free
+
 services:
   - type: web
     name: amemory
-    runtime: node
-    plan: starter
+    runtime: python
+    plan: free
     buildCommand: npm run render:build
-    startCommand: npm start
+    startCommand: cd backend && python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /api/health
-    disk:
-      name: amemory-persistent
-      mountPath: /opt/render/project/src/persistent
-      sizeGB: 1
     envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: amemory-db
+          property: connectionString
       - key: NODE_ENV
         value: production
       - key: NPM_CONFIG_PRODUCTION
         value: "false"
-      - key: PERSISTENT_PATH
-        value: /opt/render/project/src/persistent
       - key: MEMORIES_PASSWORD
         sync: false
       - key: ADMIN_PASSWORD

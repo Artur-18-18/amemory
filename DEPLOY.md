@@ -1,49 +1,43 @@
-# Деплой Amemory на Render
+# Деплой Amemory на Render (Python + PostgreSQL)
 
-## Сохранение фото, видео и музыки
+## Хранение данных
 
-На **бесплатном** плане Render файлы **удаляются** при перезапуске.
+Все **фото, видео, музыка**, журнал, лайки и визиты сохраняются в **PostgreSQL** через **SQLAlchemy**.
 
-Чтобы всё сохранялось после «сна» и деплоя:
+После «сна» и перезапуска хостинга на Render данные **не исчезают** — они в базе.
 
-1. План **Starter** ($7/мес) или выше
-2. **Persistent Disk** 1 GB (уже в `render.yaml`)
-3. Переменная `PERSISTENT_PATH=/opt/render/project/src/persistent`
-
-Все загрузки идут в диск: `uploads/` (медиа) и `data/` (журнал, лайки, визиты).
-
-### Если сервис уже создан на Free
-
-1. Render Dashboard → ваш сервис → **Settings**
-2. **Instance Type** → **Starter**
-3. **Disks** → Add Disk:
-   - Name: `amemory-persistent`
-   - Mount Path: `/opt/render/project/src/persistent`
-   - Size: 1 GB
-4. **Environment** → добавьте:
-   - `PERSISTENT_PATH` = `/opt/render/project/src/persistent`
-5. **Save** → **Manual Deploy**
-
----
-
-## GitHub + Render
+## Локальный запуск
 
 ```bash
-git add .
-git commit -m "Persistent disk for uploads"
-git push origin main
+# Python 3.11+
+pip install -r backend/requirements.txt
+npm install
+npm run dev
 ```
 
-**Build Command:** `npm run render:build`  
-**Start Command:** `npm start`  
-**Health Check:** `/api/health`
+- Сайт: http://localhost:5173  
+- API: http://localhost:3000  
+- Локальная БД: файл `amemory.db` (SQLite) в корне проекта
 
-### Environment
+## Render
 
-| Key | Value |
-|-----|--------|
-| `NODE_ENV` | `production` |
-| `NPM_CONFIG_PRODUCTION` | `false` |
-| `PERSISTENT_PATH` | `/opt/render/project/src/persistent` |
-| `MEMORIES_PASSWORD` | ваш пароль |
-| `ADMIN_PASSWORD` | ваш пароль |
+1. Push на GitHub
+2. **New → Blueprint** → подключить репозиторий (`render.yaml` создаст Web + PostgreSQL)
+3. Задать в Environment:
+   - `MEMORIES_PASSWORD`
+   - `ADMIN_PASSWORD`
+4. Deploy
+
+`DATABASE_URL` подставится автоматически из PostgreSQL.
+
+### Build / Start (вручную)
+
+| | |
+|---|---|
+| Build | `npm run render:build` |
+| Start | `cd backend && python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
+| Health | `/api/health` |
+
+## Миграция со старого Node-сервера
+
+При первом запуске Python автоматически импортирует файлы из `server/uploads/` в базу данных.

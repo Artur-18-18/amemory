@@ -1,27 +1,17 @@
 {
   "name": "amemory",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "Luxury personal blog with cinematic media showcase",
+  "description": "Luxury personal blog — React + Python FastAPI + SQLAlchemy",
   "scripts": {
     "postinstall": "npm install --prefix client --include=dev",
     "build": "npm run build --prefix client",
-    "render:build": "npm install --include=dev && npm install --prefix client --include=dev && npm run build --prefix client",
-    "start": "node server/index.js",
+    "render:build": "pip install -r backend/requirements.txt && npm install --include=dev && npm install --prefix client --include=dev && npm run build --prefix client",
+    "start": "cd backend && python -m uvicorn app.main:app --host 0.0.0.0 --port 3000",
     "predev": "npx --yes kill-port 3000",
-    "dev": "concurrently -n server,client -c blue,magenta \"npm run dev:server\" \"npm run dev:client\"",
-    "dev:server": "node server/index.js",
-    "dev:kill-port": "npx --yes kill-port 3000",
+    "dev": "concurrently -n api,client -c blue,magenta \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "cd backend && python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 3000",
     "dev:client": "npm run dev --prefix client"
-  },
-  "engines": {
-    "node": "20.x"
-  },
-  "dependencies": {
-    "cors": "^2.8.5",
-    "express": "^4.21.2",
-    "mime-types": "^2.1.35",
-    "multer": "^1.4.5-lts.1"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

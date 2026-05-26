@@ -1,6 +1,11 @@
 node_modules/
 client/node_modules/
 client/dist/
+amemory.db
+__pycache__/
+*.pyc
+.venv/
+venv/
 server/uploads/**/*
 !server/uploads/**/.gitkeep
 !server/uploads/README.md
